@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<style type="text/css">
+		#container {
+			padding: 5px;
+			border: 1px solid #333;
+		}
+	</style>
+</head>
+<body>
+
+		<div id="container">
+			<audio controls="controls" id="myAudioTag">
+			  <source id="oggSrc" src="" type="audio/ogg">
+			  <!-- <source id="mp3Src" src="" type="audio/mpeg"> -->
+				Your browser does not support the audio element.
+			</audio>
+		</div>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>
+  $(document).ready(function() {
+
+  	playTokenStatus = false;
+
+  	var apiKey = "api_key=4786330e031e8a78c8d64a2e12cc41a128fa1f36";
+  	var container = document.getElementById('container');
+  	var urlBase = "http://8tracks.com/"; 
+  	var user = "monstah/"
+  	var mixes = "mixes"
+  	var format = ".json";
+
+  	var url = urlBase + user + mixes + format + "?" + apiKey;
+  	var tokenUrl = "http://8tracks.com/sets/new.json" + "?" + apiKey;
+
+  	var play_token = "";
+
+	$.get(url)
+	.done(function(data) {
+		var json = JSON.parse(data);
+		var myMixes = json.mixes;
+		for (var i = 0; i < myMixes.length; i++) {
+			var currentMix = myMixes[i];
+
+			var currentMixContainer = document.createElement('div');
+			currentMixContainer.id = currentMix.name;
+			currentMixContainer.style.padding = "10px";
+			currentMixContainer.style.border = "1px solid black";
+			currentMixContainer.style.margin = "10px";
+
+			var currentMixInfoContainer = document.createElement('div');
+			currentMixInfoContainer.id = currentMix.name + "info";
+			
+			var currentName = document.createElement('p');
+			currentName.innerHTML = currentMix.name;
+
+			var currentDescription = document.createElement('p');
+			currentDescription.innerHTML = currentMix.description; 	
+
+			currentTags = document.createElement('p');
+			currentTags.innerHTML = currentMix.tag_list_cache;
+
+			currentMixInfoContainer.appendChild(currentName);
+			currentMixInfoContainer.appendChild(currentDescription);	
+			currentMixInfoContainer.appendChild(currentTags);
+
+
+			var pic = document.createElement('img');
+			pic.setAttribute('src',currentMix.cover_urls.sq133);
+			pic.setAttribute('alt',currentMix.id);
+			pic.style.cursor = "pointer";
+			pic.className = "mix-picture";
+
+			currentMixContainer.appendChild(pic);
+			currentMixContainer.appendChild(currentMixInfoContainer);
+
+			container.appendChild(currentMixContainer);
+
+		};
+	})
+	.fail(function() { console.log("request failed"); })
+	.always(function() { 
+		var mixPictures = document.getElementsByClassName('mix-picture');
+		for (var i = 0; i < mixPictures.length; i++) {
+			mixPictures[i].onclick = handlePicClick;
+		};
+	 });
+
+	handlePicClick = function() {
+		var picAlt = this.getAttribute('alt');
+
+		if(playTokenStatus==false) {
+			$.get(tokenUrl)
+			.done(function(data) {
+				var json = JSON.parse(data);
+				play_token = json.play_token;
+			})
+			.always(function() {
+				var playUrl = "http://8tracks.com/sets/" + play_token + "/play.json?mix_id=" + picAlt + "?" + apiKey;
+
+				$.get(playUrl)
+				.done(function(data) {
+					var json = JSON.parse(data);
+					var currentSongUrl = json.url; 
+					// document.getElementById('mp3Src').setAttribute('src',currentSongUrl);
+					document.getElementById('oggSrc').setAttribute('src',currentSongUrl);
+					document.getElementById('myAudioTag').play();
+				});
+			});
+
+			playTokenStatus = true;
+		}
+
+	}
+	
+  });
+
+</script>
+</body>
+</html>
