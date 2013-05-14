@@ -7,114 +7,221 @@
 			padding: 5px;
 			border: 1px solid #333;
 		}
+
+		.mix-picture {
+			float: left;
+		}
+
+		.playbutton {
+			background-color: green;	
+		}
+
+		.stopbutton {
+			background-color: red;
+		}
+
+		.pausebutton {
+			background-color: blue;
+		}
+
+		.button {
+			cursor: pointer;
+			width: 50px;
+			height: 30px;
+			text-align: center;
+		}
 	</style>
 </head>
 <body>
-
 		<div id="container">
-			<audio controls="controls" id="myAudioTag">
-			  <source id="oggSrc" src="" type="audio/ogg">
-			  <!-- <source id="mp3Src" src="" type="audio/mpeg"> -->
-				Your browser does not support the audio element.
-			</audio>
-		</div>
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-<script>
-  $(document).ready(function() {
-
-  	playTokenStatus = false;
-
-  	var apiKey = "api_key=4786330e031e8a78c8d64a2e12cc41a128fa1f36";
-  	var container = document.getElementById('container');
-  	var urlBase = "http://8tracks.com/"; 
-  	var user = "monstah/"
-  	var mixes = "mixes"
-  	var format = ".json";
-
-  	var url = urlBase + user + mixes + format + "?" + apiKey;
-  	var tokenUrl = "http://8tracks.com/sets/new.json" + "?" + apiKey;
-
-  	var play_token = "";
-
-	$.get(url)
-	.done(function(data) {
-		var json = JSON.parse(data);
-		var myMixes = json.mixes;
-		for (var i = 0; i < myMixes.length; i++) {
-			var currentMix = myMixes[i];
-
-			var currentMixContainer = document.createElement('div');
-			currentMixContainer.id = currentMix.name;
-			currentMixContainer.style.padding = "10px";
-			currentMixContainer.style.border = "1px solid black";
-			currentMixContainer.style.margin = "10px";
-
-			var currentMixInfoContainer = document.createElement('div');
-			currentMixInfoContainer.id = currentMix.name + "info";
 			
-			var currentName = document.createElement('p');
-			currentName.innerHTML = currentMix.name;
+		</div>
 
-			var currentDescription = document.createElement('p');
-			currentDescription.innerHTML = currentMix.description; 	
+		<!-- <audio controls="controls" id="myAudioTag">
+			  <source id="oggSrc" src="" type="audio/ogg">
+			  <source id="mp3Src" src="" type="audio/mpeg">
+				Your browser does not support the audio element.
+			</audio> -->
+<!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script> -->
+<script type="text/javascript" src="jquery-1.7.min.js"></script>
+<script src="soundmanager/script/soundmanager2.js"></script>
+<script>
+	
+	$(document).ready(function() {
 
-			currentTags = document.createElement('p');
-			currentTags.innerHTML = currentMix.tag_list_cache;
+  		theSong = null;
+  		
+  		setupSoundmanager();
+  		// setupSong(4, "test.mp3");
+  		setupPlayer();
+  		// setup8tracks();
 
-			currentMixInfoContainer.appendChild(currentName);
-			currentMixInfoContainer.appendChild(currentDescription);	
-			currentMixInfoContainer.appendChild(currentTags);
+  	});
+  	setupPlayer = function() {
+  		var container = $('#container');
+  		container.append('<div class="playbutton button"> play </div>');
+  		container.append('<div class="stopbutton button"> stop </div>');
+  		container.append('<div class="pausebutton button"> pause </div>');
+
+  		$('.playbutton').click(function(){
+  			if( theSong !== null && theSong ) {
+  				theSong.play();
+  			} else {
+  				console.log('play: theSong is not defined or null');
+  			}
+  		});
+
+  		$('.stopbutton').click(function() {
+  			if( theSong !== null && theSong ) {
+  				theSong.stop();
+  			} else {
+  				console.log('stop: theSong is not defined or null');	
+  			}
+  		});
+
+  		$('.pausebutton').click(function() {
+  			if( theSong !== null && theSong ) {
+  				theSong.pause();
+  			} else {
+  				console.log('pause: theSong is not defined or null');
+  			}
+  		});
+  	}
+
+	setup8tracks = function() {
+		playTokenStatus = false;
+
+	  	var apiKey = "api_key=4786330e031e8a78c8d64a2e12cc41a128fa1f36";
+	  	var container = document.getElementById('container');
+	  	var urlBase = "http://8tracks.com/"; 
+	  	var user = "monstah/"
+	  	var mixes = "mixes"
+	  	var format = ".json";
+
+	  	var url = urlBase + user + mixes + format + "?" + apiKey;
+	  	var tokenUrl = "http://8tracks.com/sets/new.json" + "?" + apiKey;
+
+	  	var play_token = "";
+
+		$.get(url)
+		.done(function(data) {
+			var json = JSON.parse(data);
+			var myMixes = json.mixes;
+			for (var i = 0; i < myMixes.length; i++) {
+				var currentMix = myMixes[i];
+
+				var currentMixContainer = document.createElement('div');
+				currentMixContainer.id = currentMix.name;
+				currentMixContainer.style.padding = "10px";
+				currentMixContainer.style.border = "1px solid black";
+				currentMixContainer.style.margin = "10px";
+
+				var currentMixInfoContainer = document.createElement('div');
+				currentMixInfoContainer.id = currentMix.name + "info";
+				
+				var currentName = document.createElement('p');
+				currentName.innerHTML = currentMix.name;
+
+				var currentDescription = document.createElement('p');
+				currentDescription.innerHTML = currentMix.description; 	
+
+				currentTags = document.createElement('p');
+				currentTags.innerHTML = currentMix.tag_list_cache;
+
+				currentMixInfoContainer.appendChild(currentName);
+				currentMixInfoContainer.appendChild(currentDescription);	
+				currentMixInfoContainer.appendChild(currentTags);
 
 
-			var pic = document.createElement('img');
-			pic.setAttribute('src',currentMix.cover_urls.sq133);
-			pic.setAttribute('alt',currentMix.id);
-			pic.style.cursor = "pointer";
-			pic.className = "mix-picture";
+				var pic = document.createElement('img');
+				pic.setAttribute('src',currentMix.cover_urls.sq133);
+				pic.setAttribute('alt',currentMix.id);
+				pic.style.cursor = "pointer";
+				pic.className = "mix-picture";
 
-			currentMixContainer.appendChild(pic);
-			currentMixContainer.appendChild(currentMixInfoContainer);
+				currentMixContainer.appendChild(pic);
+				currentMixContainer.appendChild(currentMixInfoContainer);
 
-			container.appendChild(currentMixContainer);
+				container.appendChild(currentMixContainer);
 
-		};
-	})
-	.fail(function() { console.log("request failed"); })
-	.always(function() { 
-		var mixPictures = document.getElementsByClassName('mix-picture');
-		for (var i = 0; i < mixPictures.length; i++) {
-			mixPictures[i].onclick = handlePicClick;
-		};
-	 });
+			};
+		})
+		.fail(function() { console.log("request failed"); })
+		.always(function() { 
+			var mixPictures = document.getElementsByClassName('mix-picture');
+			for (var i = 0; i < mixPictures.length; i++) {
+				mixPictures[i].onclick = handlePicClick;
+			};
+		 });
 
-	handlePicClick = function() {
-		var picAlt = this.getAttribute('alt');
+		handlePicClick = function() {
+			var picAlt = this.getAttribute('alt');
 
-		if(playTokenStatus==false) {
-			$.get(tokenUrl)
-			.done(function(data) {
-				var json = JSON.parse(data);
-				play_token = json.play_token;
-			})
-			.always(function() {
-				var playUrl = "http://8tracks.com/sets/" + play_token + "/play.json?mix_id=" + picAlt + "?" + apiKey;
-
-				$.get(playUrl)
+			if(playTokenStatus==false) {
+				$.get(tokenUrl)
 				.done(function(data) {
 					var json = JSON.parse(data);
-					var currentSongUrl = json.url; 
-					// document.getElementById('mp3Src').setAttribute('src',currentSongUrl);
-					document.getElementById('oggSrc').setAttribute('src',currentSongUrl);
-					document.getElementById('myAudioTag').play();
+					play_token = json.play_token;
+				})
+				.always(function() {
+					var playUrl = "http://8tracks.com/sets/" + play_token + "/play.json?mix_id=" + picAlt + "?" + apiKey;
+
+					$.get(playUrl)
+					.done(function(data) {
+						var json = JSON.parse(data);
+						var currentSongUrl = json.url;
+
+						setupSong(1,currentSongUrl); 
+						// document.getElementById('mp3Src').setAttribute('src',currentSongUrl);
+						// document.getElementById('oggSrc').setAttribute('src',currentSongUrl);
+						// document.getElementById('myAudioTag').play();
+					});
 				});
-			});
 
-			playTokenStatus = true;
+				playTokenStatus = true;
+			}
+
 		}
-
+			
 	}
-	
-  });
+
+	setupSoundmanager = function() {
+		soundManager.setup({
+			url: "soundmanager/swf/",
+			flashVersion: 9,
+			preferFlash: false,
+			onready: function() {
+    			// Ready to use; soundManager.createSound() etc. can now be called.
+    			console.log('soundmanager ready - you can now play sounds');
+    			setupSong("5", "test.mp3");
+    			// setupSong();
+  			}
+		});
+
+		
+	}
+
+	setupSong = function(ID,URL) {
+			theSong = soundManager.createSound({
+    				id:ID,
+    				url:URL,
+    				autoLoad:true,
+    				onplay : function() {
+    					// xxx addClass('playing');
+    					console.log('the song is playing...');
+    				},
+					onresume : function() {
+						// xxx addClass('playing');
+					},
+					onpause : function() {
+						// xxx addClass('paused');
+					},
+					onfinish : function() {
+						// play next track nextTrack();
+					}    				
+    			});
+			console.log('song has been set up');
+	}
 
 </script>
 </body>
