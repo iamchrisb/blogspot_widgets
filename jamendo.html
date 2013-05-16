@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<link rel="stylesheet" type="text/css" href="reset.css">
+	<style type="text/css">
+		@import url(http://weloveiconfonts.com/api/?family=fontawesome);
+
+		/* fontawesome */
+		[class*="fontawesome-"]:before {
+		  font-family: 'FontAwesome', sans-serif;
+		}
+
+		#container {
+			/*padding: 5px;*/
+			/*border: 1px solid #333;*/
+			overflow: hidden;
+		}
+
+		.mix-picture {
+			float: left;
+		}
+
+		.playbutton {
+			color: black;
+			/*display: block;
+			position: relative;*/
+			opacity: 0.7;
+			line-height: 100px;
+
+		}
+
+		.playbuttonContainer {
+			width: 100px;
+			height: 100px;
+			position: absolute;
+			top:0;	
+			font-size: 40px;
+			text-align: center;
+		}
+
+		.stopbutton {
+			background-color: red;
+		}
+
+		.pausebutton {
+			background-color: blue;
+		}
+
+		.button {
+			cursor: pointer;
+			width: 50px;
+			height: 30px;
+			text-align: center;
+		}
+
+		.innerContainer {
+			float: left;
+			cursor: pointer;
+			opacity: 0.50;
+			position: relative;
+		}
+
+		.innerContainer:hover {
+			opacity: 1.0;
+		}
+
+		body {
+			background-color: black;
+		}
+	</style>
+</head>
+<body>
+		<div id="container">
+			
+		</div>
+
+<!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script> -->
+<script type="text/javascript" src="jquery-1.7.min.js"></script>
+<script src="soundmanager/script/soundmanager2.js"></script>
+<script>
+	
+	$(document).ready(function() {
+
+  		currentSong = null;
+  		songIsPlaying = false;
+  		oldSong = null;
+
+  		setupSoundmanager();
+  		// setupSong(4, "test.mp3");
+  		// setupPlayer();
+  		setupJamendo();
+
+  	});
+
+  	setupPlayer = function() {
+  		var container = $('#container');
+  		container.append('<div class="playbutton button"> play </div>');
+  		container.append('<div class="stopbutton button"> stop </div>');
+  		container.append('<div class="pausebutton button"> pause </div>');
+
+  		$('.playbutton').click(function(){
+  			if( theSong !== null && theSong ) {
+  				theSong.play();
+  			} else {
+  				console.log('play: theSong is not defined or null');
+  			}
+  		});
+
+  		$('.stopbutton').click(function() {
+  			if( theSong !== null && theSong ) {
+  				theSong.stop();
+  			} else {
+  				console.log('stop: theSong is not defined or null');	
+  			}
+  		});
+
+  		$('.pausebutton').click(function() {
+  			if( theSong !== null && theSong ) {
+  				theSong.pause();
+  			} else {
+  				console.log('pause: theSong is not defined or null');
+  			}
+  		});
+  	}
+
+	setupJamendo = function() {
+
+		// demo call: http://api.jamendo.com/v3.0/tracks/?client_id=your_client_id&format=jsonpretty&limit=2&fuzzytags=jazz+groove+rock&speed=medium+high+veryhigh&include=licenses+musicinfo+stats&groupby=artist_id
+
+	  	var clientId = "client_id=5e21ebc1";
+	  	var urlBaseTracks = "http://api.jamendo.com/v3.0/tracks/?"; 
+
+	  	var formatJson = "&format=json";
+	  	var tags = "fuzzytags=jazz+groove+rock";
+
+	  	var limit = "&limit=100";
+	  	var url = urlBaseTracks;
+
+	  	var testUrl = "http://api.jamendo.com/v3.0/tracks/?client_id=5e21ebc1&format=json&limit=100&fuzzytags=jazz&imagesize=100&order=downloads_week&groupby=artist_id";
+
+	  	getSongs(0, testUrl);
+	  	// getSongs(100, testUrl);
+
+	}
+
+	getSongs = function(startIndex, testUrl) {
+		  	var container = $('#container');
+			$.get(testUrl)
+			.done(function(data) {
+				var json = JSON.parse(data);
+				var results = json.results;
+
+				for (var i = 0; i < results.length; i++) {
+					var name = results[i].name;
+					var imageUrl = results[i].album_image;
+					var audio = results[i].audio;
+					
+					// console.log(name);
+
+					containerId = i + startIndex;
+					container.append('<div class="songContainer' + containerId + ' innerContainer"></div>');
+					var current = $( ".songContainer" + containerId );
+
+					current.append('<img class="songImg"' + containerId + ' src=' + imageUrl + ' alt=' + audio + '/>');
+					var img = $(".songImg" + containerId);
+					// img.attr("data-audio-link",audio);
+					// console.log(img.attr("data-audio-link"));
+
+
+					current.click(handlePicClick);
+					current.hover(imgHoverIn,imgHoverOut);
+					// container.append('<div>' + + '</div>')
+				};
+			})
+			.fail(function() { console.log("request failed"); });
+		}
+
+		imgHoverIn = function() {
+			$this = $(this);
+			$this.append('<div class="playbuttonContainer"><span class="playbutton fontawesome-play"></span></div>');
+		}
+
+		imgHoverOut = function() {
+			$this = $(this);
+			$this.find(".playbuttonContainer").remove();
+		}
+
+		handlePicClick = function() {
+			$this = $(this);
+			// $(this).css('position','absolute');
+
+			if(currentSong && currentSong != null && songIsPlaying ){
+				currentSong.stop();
+				currentSong.destruct();
+			}
+
+			if(oldSong !== null) {
+				oldSong = $this;
+			}
+
+			$this = $(this);
+			var URL = $this.children("img").attr("alt");
+			var ID = 0;
+			currentSong = soundManager.createSound({
+				id:ID,
+    			url:URL,
+    			autoLoad:true,
+    			onplay: function() {
+    				songIsPlaying = true;
+    			}
+			});
+
+			currentSong.play();
+		}
+
+	setupSoundmanager = function() {
+		soundManager.setup({
+			url: "soundmanager/swf/",
+			flashVersion: 9,
+			preferFlash: false,
+			onready: function() {
+    			// Ready to use; soundManager.createSound() etc. can now be called.
+    			console.log('soundmanager ready - you can now play sounds');
+    			// setupSong("5", "test.mp3");
+    			// setupSong();
+  			}
+		});
+
+		
+	}
+
+	setupSong = function(ID,URL) {
+			theSong = soundManager.createSound({
+    				id:ID,
+    				url:URL,
+    				autoLoad:true,
+    				onplay : function() {
+    					// xxx addClass('playing');
+    					console.log('the song is playing...');
+    				},
+					onresume : function() {
+						// xxx addClass('playing');
+					},
+					onpause : function() {
+						// xxx addClass('paused');
+					},
+					onfinish : function() {
+						// play next track nextTrack();
+					}    				
+    			});
+			console.log('song has been set up');
+	}
+
+</script>
+</body>
+</html>
